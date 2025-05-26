@@ -232,10 +232,12 @@ class TaskManager {
 
             taskText.replaceWith(input);
             input.focus();
+            input.select(); 
         });
 
         menuButton.addEventListener('click', (e) => {
              e.stopPropagation();
+             // Close other popups
              document.querySelectorAll('.task-menu-popup:not(.hidden)').forEach(popup => {
                  if (popup !== menuPopup) {
                      popup.classList.add('hidden');
@@ -261,7 +263,7 @@ class TaskManager {
 
         deleteButton.addEventListener('click', () => {
             task.remove();
-            menuPopup.classList.add('hidden');
+            menuPopup.classList.add('hidden'); 
             this.saveToLocalStorage();
         });
 
@@ -270,12 +272,14 @@ class TaskManager {
             this.saveToLocalStorage();
         });
 
+        // Click outside to close menu
         document.addEventListener('click', (e) => {
             if (!menuButton.contains(e.target) && !menuPopup.contains(e.target)) {
                 menuPopup.classList.add('hidden');
             }
         });
 
+         // Prevent closing when clicking inside the menu popup
          menuPopup.addEventListener('click', (e) => {
              e.stopPropagation();
          });
