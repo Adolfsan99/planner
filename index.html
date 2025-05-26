@@ -1,0 +1,67 @@
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Planificador Semanal</title>
+    <link rel="stylesheet" href="styles.css">
+    <script type="importmap">
+    {
+        "imports": {
+            "sortablejs": "https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/modular/sortable.esm.js"
+        }
+    }
+    </script>
+</head>
+<body>
+    <div class="container">
+        <div class="actions">
+            <button id="showCompleted">Ver Tareas Completadas</button>
+            <button id="moveCompleted">Listar Tareas Completas</button>
+            <button id="exportData">Exportar Datos</button>
+            <button id="importData">Importar Datos</button>
+        </div>
+
+        <div class="days-container">
+            <!-- Los días se generarán dinámicamente -->
+        </div>
+
+        <div id="completedTasks" class="completed-container hidden">
+            <h2>Tareas Completadas</h2>
+            <div class="completed-tasks-list"></div>
+        </div>
+    </div>
+
+    <!-- Template para la estructura de cada día -->
+    <template id="dayTemplate">
+        <div class="day-card">
+            <h2 class="day-title"></h2>
+            <button class="add-task">+ Nueva Tarea</button>
+            
+            <div class="subspace">
+                <h3>Prioritarias</h3>
+                <div class="priority-tasks tasks-list"></div>
+            </div>
+
+            <div class="subspace">
+                <h3>Todo lo demás</h3>
+                <div class="other-tasks tasks-list"></div>
+            </div>
+        </div>
+    </template>
+
+    <!-- Template para cada tarea -->
+    <template id="taskTemplate">
+        <div class="task" draggable="true">
+            <span class="task-text"></span>
+            <input type="checkbox" class="task-check">
+            <button class="task-menu">⋮</button>
+            <div class="task-menu-popup hidden">
+                <button class="edit-task">Editar</button>
+                <button class="duplicate-task">Duplicar</button>
+                <button class="delete-task">Eliminar</button>
+            </div>
+        </div>
+    </template>
+
+    <script type="module" src="app.js"></script>
+</body>
+</html>
