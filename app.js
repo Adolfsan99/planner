@@ -94,7 +94,6 @@ class TaskManager {
             list.sortable = new Sortable(list, {
                 group: 'tasks',
                 animation: 150,
-                easing: 'cubic-bezier(1, 0, 0, 1)',
                 draggable: '.task',
                 handle: '.task-text',
                 onMove: function (evt) {
@@ -206,10 +205,17 @@ class TaskManager {
             input.setAttribute('placeholder', 'Editar tarea');
 
             const saveEdit = () => {
-                 newTaskText.textContent = input.value.trim() || newTaskText.textContent;
+                 const newText = input.value.trim();
+                 // Only save and export if text has changed or input is not empty after editing
+                 if (newText !== newTaskText.textContent.trim() || newText !== '') {
+                     newTaskText.textContent = newText || 'Nueva tarea'; // Set default if empty
+                     this.saveToLocalStorage();
+                     if (newText !== '') { // Only export if a name was actually entered
+                        this.exportData(); // Auto-export after editing
+                     }
+                 }
                  input.replaceWith(newTaskText);
-                 // No need to re-setup all listeners on task for text change
-                 this.saveToLocalStorage();
+                 task.classList.remove('editing'); // Remove editing class
             };
 
             input.addEventListener('blur', saveEdit);
@@ -220,13 +226,14 @@ class TaskManager {
                      saveEdit();
                 } else if (e.key === 'Escape') {
                     input.replaceWith(newTaskText);
-                    // No need to re-setup all listeners on task for text change
+                    task.classList.remove('editing'); // Remove editing class on escape
                 }
             });
 
             newTaskText.replaceWith(input);
             input.focus();
             input.select(); // Select existing text
+            task.classList.add('editing'); // Add editing class
         });
 
         const closeAllMenus = () => {
@@ -285,7 +292,8 @@ class TaskManager {
         // Close menu when clicking outside
         document.addEventListener('click', (e) => {
             // Check if the click was outside *any* menu or menu button
-            if (!e.target.closest('.task-menu-popup') && !e.target.closest('.task-menu')) {
+            // Also check if it's not inside an active input for editing
+            if (!e.target.closest('.task-menu-popup') && !e.target.closest('.task-menu') && !e.target.classList.contains('task-text-edit')) {
                  closeAllMenus();
             }
         });
@@ -300,8 +308,18 @@ class TaskManager {
 
     duplicateTask(task) {
         const newTask = task.cloneNode(true);
-        newTask.classList.remove('completed', 'menu-open'); // Remove completed and menu-open classes
+        newTask.classList.remove('completed', 'menu-open', 'editing'); // Remove completed, menu-open, and editing classes
         newTask.querySelector('.task-check').checked = false;
+
+        // Ensure task text is a span, not an input
+        const currentTaskTextElement = newTask.querySelector('.task-text-edit') || newTask.querySelector('.task-text');
+        if (currentTaskTextElement.tagName === 'INPUT') {
+             const span = document.createElement('span');
+             span.classList.add('task-text');
+             span.textContent = currentTaskTextElement.value.trim() || 'Nueva tarea';
+             currentTaskTextElement.replaceWith(span);
+        }
+
 
         const newMenuPopup = newTask.querySelector('.task-menu-popup');
         if (newMenuPopup) {
@@ -355,11 +373,19 @@ class TaskManager {
             <span class="task-text">${text}</span>
             <div class="completed-actions">
                 <button class="completed-restore-btn" data-original-day="${originalDay || ''}">Restaurar</button>
+                <button class="completed-delete-btn">Eliminar</button>
             </div>
             `;
 
         div.querySelector('.completed-restore-btn').addEventListener('click', () => {
             this.restoreTask(div, originalDay);
+        });
+
+        div.querySelector('.completed-delete-btn').addEventListener('click', () => {
+            if (confirm('¿Está seguro de que desea eliminar esta tarea completada de forma permanente?')) {
+                 div.remove();
+                 this.saveToLocalStorage(); // Save state after deletion
+            }
         });
 
         return div;
@@ -406,14 +432,20 @@ class TaskManager {
             const dayTitle = dayCard.querySelector('.day-title')?.textContent;
             if (dayTitle) {
                  data.tasks[dayTitle] = {
-                     priority: Array.from(dayCard.querySelector('.priority-tasks')?.children || []).map(task => ({
-                         text: task.querySelector('.task-text')?.textContent || '',
-                         completed: task.classList.contains('completed')
-                     })),
-                     other: Array.from(dayCard.querySelector('.other-tasks')?.children || []).map(task => ({
-                         text: task.querySelector('.task-text')?.textContent || '',
-                         completed: task.classList.contains('completed')
-                     }))
+                     priority: Array.from(dayCard.querySelector('.priority-tasks')?.children || []).map(task => {
+                         const textElement = task.querySelector('.task-text-edit') || task.querySelector('.task-text');
+                         return {
+                             text: textElement?.value || textElement?.textContent || '',
+                             completed: task.classList.contains('completed')
+                         };
+                     }),
+                     other: Array.from(dayCard.querySelector('.other-tasks')?.children || []).map(task => {
+                          const textElement = task.querySelector('.task-text-edit') || task.querySelector('.task-text');
+                          return {
+                              text: textElement?.value || textElement?.textContent || '',
+                              completed: task.classList.contains('completed')
+                          };
+                     })
                  };
             }
         });
@@ -510,7 +542,6 @@ class TaskManager {
         }
     }
 
-
     setupImportExport() {
         document.getElementById('exportData').addEventListener('click', () => this.exportData());
         document.getElementById('importData').addEventListener('click', () => this.importData());
@@ -522,11 +553,22 @@ class TaskManager {
             alert("No hay datos para exportar.");
             return;
         }
+
+        const now = new Date();
+        const day = String(now.getDate()).padStart(2, '0');
+        const month = String(now.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
+        const year = now.getFullYear();
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        const seconds = String(now.getSeconds()).padStart(2, '0');
+
+        const filename = `Planner-${day}-${month}-${year}-${hours}${minutes}${seconds}.json`;
+
         const blob = new Blob([data], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = 'tareas.json';
+        a.download = filename;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);

@@ -28,15 +28,15 @@ body {
     cursor: pointer;
     font-size: 1rem; 
     font-weight: 600;
-    transition: background-color 0.2s ease-in-out, transform 0.1s ease; 
+    transition: background-color 0.2s ease-in-out; 
 }
 
 .actions button:hover {
-    background-color: #4a7bb0;
-    transform: translateY(-2px); 
+    background-color: #4a7bb0; 
 }
+
 .actions button:active {
-    transform: translateY(0);
+    background-color: #3a6a9b; 
 }
 
 .days-container {
@@ -104,7 +104,7 @@ body {
     margin-top: auto; 
     font-weight: 600;
     font-size: 1rem;
-    transition: background-color 0.2s ease-in-out, transform 0.1s ease;
+    transition: background-color 0.2s ease-in-out;
     align-self: flex-start; 
     margin-left: -10px; 
     margin-bottom: -10px; 
@@ -113,11 +113,10 @@ body {
 }
 
 .add-task:hover {
-    background-color: #27ae60;
-    transform: translateY(-2px);
+    background-color: #27ae60; 
 }
 .add-task:active {
-    transform: translateY(0);
+    background-color: #229954; 
 }
 
 .task {
@@ -129,7 +128,6 @@ body {
     align-items: center;
     gap: 10px;
     box-shadow: 0 1px 5px rgba(0, 0, 0, 0.08);
-    transition: all 0.2s ease-in-out;
     border-left: 4px solid transparent;
     position: relative;
     z-index: 0; 
@@ -174,6 +172,9 @@ body {
     font-size: 1rem;
     background-color: #ecf0f1; 
     box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
+    z-index: 2; 
+    position: relative; 
+    min-width: 0; 
 }
 
 .task-check {
@@ -181,6 +182,8 @@ body {
     min-height: 18px; 
     cursor: pointer;
     accent-color: #2ecc71; 
+    z-index: 1; 
+    position: relative;
 }
 
 .task-menu {
@@ -191,6 +194,8 @@ body {
     color: #555;
     padding: 0 5px;
     line-height: 1; 
+    z-index: 1; 
+    position: relative;
 }
 
 .task-menu-popup {
@@ -203,22 +208,24 @@ body {
     padding: 5px 0;
     z-index: 2000; 
     min-width: 120px; 
+    display: flex; 
+    flex-direction: column;
+    gap: 5px; 
 }
 
 .task-menu-popup button {
-    display: block;
-    width: 100%;
-    text-align: left;
+    background: none;
+    border: none;
     padding: 8px 15px;
-    font-size: 0.95rem; 
-    color: #333;
-    border: none; 
-    background: none; 
+    text-align: left;
     cursor: pointer;
+    font-size: 0.9rem;
+    color: #333;
+    transition: background-color 0.1s ease;
 }
 
 .task-menu-popup button:hover {
-    background-color: #f5f7fa;
+    background-color: #f2f2f2;
 }
 
 .hidden {
@@ -232,16 +239,12 @@ body {
     right: 0;
     bottom: 0;
     background-color: rgba(44, 62, 80, 0.7); 
-    display: none;
+    display: none; 
     z-index: 1000;
-    backdrop-filter: blur(3px); 
-    transition: opacity 0.3s ease;
-    opacity: 0;
 }
 
 .overlay.active {
-    display: block;
-    opacity: 1;
+    display: block; 
 }
 
 .completed-container {
@@ -258,14 +261,11 @@ body {
     max-height: 90vh; 
     overflow-y: auto;
     z-index: 1001;
-    opacity: 0; 
-    transform: translate(-50%, -48%); 
-    transition: all 0.3s ease-in-out;
+    display: none; 
 }
 
 .completed-container:not(.hidden) {
-     opacity: 1;
-     transform: translate(-50%, -50%);
+     display: block; 
 }
 
 .completed-container h2 {
@@ -282,14 +282,16 @@ body {
 
 .close-popup {
     position: absolute;
-    top: 15px; 
-    right: 15px; 
+    top: 10px; 
+    right: 10px; 
     background: none;
     border: none;
     font-size: 2rem; 
     cursor: pointer;
     color: #95a5a6; 
     transition: color 0.2s ease;
+    padding: 5px; 
+    line-height: 1;
 }
 .close-popup:hover {
     color: #7f8c8d;
@@ -300,61 +302,60 @@ body {
     padding: 15px; 
     margin: 10px 0; 
     border-radius: 5px;
-    display: flex;
-    align-items: center;
+    display: flex; 
     justify-content: space-between;
-    border-left: 4px solid #bdc3c7; 
-    box-shadow: 0 1px 5px rgba(0, 0, 0, 0.05);
+    align-items: center;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
 }
 
 .completed-task .task-text {
     flex-grow: 1;
+    margin-right: 10px; 
+    font-size: 1rem;
     color: #555;
-    text-decoration: line-through; 
-    margin-right: 15px; 
+    text-decoration: none; 
 }
 
 .completed-actions {
-    flex-shrink: 0; 
+    display: flex;
+    gap: 10px;
 }
 
 .completed-actions button {
-    background-color: #4a6fa5;
-    color: white;
-    border: none;
-    padding: 8px 15px; 
+    padding: 5px 10px;
     border-radius: 4px;
     cursor: pointer;
-    margin-left: 10px;
     font-size: 0.9rem;
+    font-weight: 600;
     transition: background-color 0.2s ease;
 }
 
-.completed-actions button:hover {
-    background-color: #3a5a80;
+.completed-restore-btn {
+    background-color: #3498db;
+    color: white;
+    border: 1px solid #3498db;
 }
 
-@media (max-width: 1024px) {
-    .container {
-        padding: 15px;
-    }
-    body {
-        padding: 15px;
-    }
+.completed-restore-btn:hover {
+    background-color: #2980b9;
 }
 
-@media (max-width: 768px) {
-    .completed-container {
-        width: 95%;
-        padding: 20px;
-    }
+.completed-delete-btn {
+    background-color: #e74c3c;
+    color: white;
+    border: 1px solid #e74c3c;
+}
 
-    .actions {
-        flex-direction: column; 
-        gap: 8px;
-    }
-    .actions button {
-        width: 100%; 
-        text-align: center;
-    }
+.completed-delete-btn:hover {
+    background-color: #c0392b;
+}
+
+.sortable-ghost {
+    opacity: 0.5;
+    background-color: #f0f0f0;
+    border: 1px dashed #aaa;
+}
+
+.sortable-drag {
+    user-select: none;
 }
