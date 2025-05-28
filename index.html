@@ -58,11 +58,30 @@
             <button class="task-menu">⋮</button>
             <div class="task-menu-popup hidden">
                 <button class="edit-task">Editar</button>
-                <button class="duplicate-task">Duplicar</button>
+                <button class="move-task">Mover</button> 
                 <button class="delete-task">Eliminar</button>
             </div>
         </div>
     </template>
+
+    <!-- Template para el popup de mover tarea -->
+    <template id="moveTaskPopupTemplate">
+        <div class="move-task-popup-content">
+            <h3>Mover Tarea a:</h3>
+            <select class="move-day-select"></select>
+            <div class="popup-actions">
+                <button class="move-accept-btn">Aceptar</button>
+                <button class="move-cancel-btn">Cancelar</button>
+            </div>
+        </div>
+    </template>
+
+    <!-- Popup de mover tarea -->
+    <div id="moveTaskPopupOverlay" class="overlay hidden">
+         <div id="moveTaskPopup" class="move-task-popup hidden">
+             <!-- Content will be inserted from moveTaskPopupTemplate -->
+         </div>
+    </div>
 
     <script type="module" src="app.js"></script>
 </body>
