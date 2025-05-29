@@ -13,6 +13,7 @@ class TaskManager {
         this.initializeSortable();
         this.setupCompletedTasksPopup();
         this.setupImportExport();
+        this.setupMoveTaskPopup(); 
     }
 
     setupDays() {
@@ -27,14 +28,14 @@ class TaskManager {
             ...this.days.slice(0, todayIndex)
         ];
 
-        container.innerHTML = '';
+        container.innerHTML = ''; 
 
         reorderedDays.forEach(day => {
             const dayElement = template.content.cloneNode(true);
             const dayCard = dayElement.querySelector('.day-card');
             dayElement.querySelector('.day-title').textContent = day;
 
-            if (day === this.days[todayIndex]) {
+            if (day === this.days[todayIndex]) { 
                 dayCard.classList.add('current-day');
             }
 
@@ -55,33 +56,84 @@ class TaskManager {
     }
 
     setupCompletedTasksPopup() {
-        const overlay = document.createElement('div');
-        overlay.className = 'overlay';
-        document.body.appendChild(overlay);
+        const overlay = document.getElementById('moveTaskPopupOverlay'); 
+        if (!overlay) {
+            console.error("Overlay element not found.");
+            return;
+        }
+        overlay.classList.add('generic-overlay'); 
 
         const completedContainer = document.getElementById('completedTasks');
-        const closeButton = document.createElement('button');
-        closeButton.className = 'close-popup';
-        closeButton.innerHTML = '×';
-        const closePopup = () => {
-             overlay.classList.remove('active');
-             completedContainer.classList.add('hidden');
-        };
-        closeButton.addEventListener('click', closePopup);
-
         if (!completedContainer.querySelector('.close-popup')) {
-             completedContainer.insertBefore(closeButton, completedContainer.firstChild);
+            const closeButton = document.createElement('button');
+            closeButton.className = 'close-popup';
+            closeButton.innerHTML = '×';
+            closeButton.addEventListener('click', this.closeAllPopups.bind(this)); 
+            completedContainer.insertBefore(closeButton, completedContainer.firstChild);
         }
 
+
         document.getElementById('showCompleted').addEventListener('click', () => {
+            this.closeAllPopups(); 
             overlay.classList.add('active');
             completedContainer.classList.remove('hidden');
         });
 
         overlay.addEventListener('click', (e) => {
             if (e.target === overlay) {
-                closePopup();
+                this.closeAllPopups();
             }
+        });
+    }
+
+    setupMoveTaskPopup() {
+        const popup = document.getElementById('moveTaskPopup');
+        const overlay = document.getElementById('moveTaskPopupOverlay');
+        const template = document.getElementById('moveTaskPopupTemplate');
+
+        if (!popup || !overlay || !template) {
+            console.error("Move task popup elements or template not found.");
+            return;
+        }
+
+        const content = template.content.cloneNode(true);
+        popup.appendChild(content);
+
+        const daySelect = popup.querySelector('.move-day-select');
+        this.days.forEach(day => {
+            const option = document.createElement('option');
+            option.value = day;
+            option.textContent = day;
+            daySelect.appendChild(option);
+        });
+
+        popup.querySelector('.move-accept-btn').addEventListener('click', () => this.handleMoveTaskAccept());
+        popup.querySelector('.move-cancel-btn').addEventListener('click', () => this.closeAllPopups());
+
+        popup.addEventListener('click', (e) => {
+            e.stopPropagation();
+        });
+    }
+
+    closeAllPopups() {
+        const overlay = document.getElementById('moveTaskPopupOverlay');
+        if (overlay) {
+            overlay.classList.remove('active');
+        }
+
+        const completedContainer = document.getElementById('completedTasks');
+        if (completedContainer) {
+            completedContainer.classList.add('hidden');
+        }
+
+        const movePopup = document.getElementById('moveTaskPopup');
+        if (movePopup) {
+            movePopup.classList.add('hidden');
+        }
+
+        document.querySelectorAll('.task-menu-popup:not(.hidden)').forEach(popup => {
+            popup.classList.add('hidden');
+            popup.closest('.task')?.classList.remove('menu-open');
         });
     }
 
@@ -93,15 +145,15 @@ class TaskManager {
 
             list.sortable = new Sortable(list, {
                 group: 'tasks',
-                animation: 150,
+                animation: 0, 
                 draggable: '.task',
                 handle: '.task-text',
                 onMove: function (evt) {
                     if (evt.to.classList.contains('priority-tasks')) {
-                         const priorityTasks = evt.to.querySelectorAll('.task:not(.sortable-ghost)');
-                         if (priorityTasks.length >= 3 && !evt.from.classList.contains('priority-tasks')) {
-                              return false;
-                         }
+                        const priorityTasks = evt.to.querySelectorAll('.task:not(.sortable-ghost):not(.sortable-drag)'); 
+                        if (priorityTasks.length >= 3 && !evt.from.classList.contains('priority-tasks')) {
+                            return false;
+                        }
                     }
                     return true;
                 },
@@ -109,30 +161,34 @@ class TaskManager {
                     const taskElement = evt.item;
 
                     const activeInput = taskElement.querySelector('.task-text-edit');
-                     if(activeInput) {
-                         const taskTextSpan = document.createElement('span');
-                         taskTextSpan.classList.add('task-text');
-                         taskTextSpan.textContent = activeInput.value.trim() || 'Nueva tarea';
-                         activeInput.replaceWith(taskTextSpan);
-                     }
-                    this.setupTaskEventListeners(taskElement);
+                    if(activeInput) {
+                        const taskTextSpan = document.createElement('span');
+                        taskTextSpan.classList.add('task-text');
+                        taskTextSpan.textContent = activeInput.value.trim() || 'Nueva tarea';
+                        activeInput.replaceWith(taskTextSpan);
+                    }
+                    this.setupTaskEventListeners(taskElement); 
 
 
                     taskElement.classList.remove('priority-task', 'other-task');
                     if (evt.to.classList.contains('priority-tasks')) {
                         taskElement.classList.add('priority-task');
-                    } else {
+                    } else { 
                         taskElement.classList.add('other-task');
                     }
 
+                    const isCompleted = taskElement.querySelector('.task-check')?.checked;
+                    taskElement.classList.toggle('completed', isCompleted);
+
+
                     this.saveToLocalStorage();
                 },
-                 onRemove: () => {
-                    this.saveToLocalStorage();
-                 },
-                 onUpdate: () => {
-                    this.saveToLocalStorage();
-                 },
+                onRemove: () => {
+                    this.saveToLocalStorage(); 
+                },
+                onUpdate: () => {
+                    this.saveToLocalStorage(); 
+                },
             });
         });
     }
@@ -142,7 +198,7 @@ class TaskManager {
         const otherTasksList = dayCard.querySelector('.other-tasks');
         const task = this.createTaskElement('Nueva tarea');
         otherTasksList.appendChild(task);
-        task.classList.add('other-task'); // Ensure it's added as other-task by default
+        task.classList.add('other-task'); 
         this.saveToLocalStorage();
     }
 
@@ -156,13 +212,8 @@ class TaskManager {
 
         taskTextSpan.textContent = text;
 
-        if (isCompleted) {
-            task.classList.add('completed');
-            taskCheckbox.checked = true;
-        } else {
-             taskCheckbox.checked = false;
-             task.classList.remove('completed');
-        }
+        taskCheckbox.checked = isCompleted;
+        task.classList.toggle('completed', isCompleted);
 
         this.setupTaskEventListeners(task);
 
@@ -170,200 +221,246 @@ class TaskManager {
     }
 
     setupTaskEventListeners(task) {
-        // Clone and replace elements to remove previous event listeners
-        const elementsToReattach = [
-            { selector: '.task-text', handler: 'dblclick' },
-            { selector: '.task-menu', handler: 'click' },
-            { selector: '.edit-task', handler: 'click' },
-            { selector: '.duplicate-task', handler: 'click' },
-            { selector: '.delete-task', handler: 'click' },
-            { selector: '.task-check', handler: 'change' }
-        ];
+        const taskText = task.querySelector('.task-text');
+        const menuButton = task.querySelector('.task-menu');
+        const menuPopup = task.querySelector('.task-menu-popup');
+        const editButton = task.querySelector('.edit-task');
+        const moveButton = task.querySelector('.move-task'); 
+        const deleteButton = task.querySelector('.delete-task');
+        const taskCheck = task.querySelector('.task-check');
 
-        elementsToReattach.forEach(({ selector }) => {
-             const oldEl = task.querySelector(selector);
-             if (oldEl) {
-                 const newEl = oldEl.cloneNode(true);
-                 oldEl.replaceWith(newEl);
-             }
-        });
+        taskText.addEventListener('dblclick', () => {
+            this.closeAllMenus(task); 
 
-        const newTaskText = task.querySelector('.task-text');
-        const newMenuButton = task.querySelector('.task-menu');
-        const newMenuPopup = task.querySelector('.task-menu-popup');
-        const newEditButton = task.querySelector('.edit-task');
-        const newDuplicateButton = task.querySelector('.duplicate-task');
-        const newDeleteButton = task.querySelector('.delete-task');
-        const newTaskCheck = task.querySelector('.task-check');
-
-        // Re-add listeners
-        newTaskText.addEventListener('dblclick', () => {
             const input = document.createElement('input');
             input.type = 'text';
-            input.value = newTaskText.textContent.trim();
+            input.value = taskText.textContent.trim();
             input.classList.add('task-text-edit');
             input.setAttribute('placeholder', 'Editar tarea');
 
             const saveEdit = () => {
-                 const newText = input.value.trim();
-                 // Only save and export if text has changed or input is not empty after editing
-                 if (newText !== newTaskText.textContent.trim() || newText !== '') {
-                     newTaskText.textContent = newText || 'Nueva tarea'; // Set default if empty
-                     this.saveToLocalStorage();
-                     if (newText !== '') { // Only export if a name was actually entered
-                        this.exportData(); // Auto-export after editing
-                     }
-                 }
-                 input.replaceWith(newTaskText);
-                 task.classList.remove('editing'); // Remove editing class
+                const newText = input.value.trim();
+                if (input.parentNode) { 
+                    taskText.textContent = newText || 'Nueva tarea'; 
+                    input.replaceWith(taskText); 
+                    task.classList.remove('editing'); 
+                    if (newText !== taskText.textContent.trim() && newText !== '') { 
+                        this.saveToLocalStorage();
+                        this.exportData(); 
+                    } else if (newText === '') { 
+                        this.saveToLocalStorage();
+                        this.exportData();
+                    }
+                }
             };
 
             input.addEventListener('blur', saveEdit);
 
             input.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter') {
-                     e.preventDefault();
-                     saveEdit();
+                    e.preventDefault(); 
+                    saveEdit();
                 } else if (e.key === 'Escape') {
-                    input.replaceWith(newTaskText);
-                    task.classList.remove('editing'); // Remove editing class on escape
+                    if (input.parentNode) {
+                        input.replaceWith(taskText); 
+                        task.classList.remove('editing'); 
+                    }
                 }
             });
 
-            newTaskText.replaceWith(input);
+            taskText.replaceWith(input); 
             input.focus();
-            input.select(); // Select existing text
-            task.classList.add('editing'); // Add editing class
+            input.select(); 
+            task.classList.add('editing'); 
         });
 
-        const closeAllMenus = () => {
-             document.querySelectorAll('.task-menu-popup:not(.hidden)').forEach(popup => {
-                 popup.classList.add('hidden');
-                 popup.closest('.task')?.classList.remove('menu-open'); // Remove class when closing
-             });
+        const closeAllMenus = (exceptTask = null) => {
+            document.querySelectorAll('.task-menu-popup:not(.hidden)').forEach(popup => {
+                const taskElement = popup.closest('.task');
+                if (taskElement !== exceptTask) { 
+                    popup.classList.add('hidden');
+                    taskElement?.classList.remove('menu-open'); 
+                }
+            });
         };
 
-        newMenuButton.addEventListener('click', (e) => {
-             e.stopPropagation(); // Prevent document click listener from closing immediately
-             const isHidden = newMenuPopup.classList.contains('hidden');
-             closeAllMenus(); // Close any other open menus first
+        menuButton.addEventListener('click', (e) => {
+            e.stopPropagation(); 
+            const isHidden = menuPopup.classList.contains('hidden');
+            closeAllMenus(task); 
 
-             if (isHidden) {
-                newMenuPopup.classList.remove('hidden');
-                task.classList.add('menu-open'); // Add class when opening
-             } else {
-                newMenuPopup.classList.add('hidden');
-                task.classList.remove('menu-open'); // Remove class when closing
-             }
-        });
-
-        newEditButton.addEventListener('click', () => {
-            const currentTaskText = task.querySelector('.task-text');
-             if (currentTaskText) {
-                 const dblclickEvent = new MouseEvent('dblclick', {
-                     bubbles: true,
-                     cancelable: true,
-                     view: window
-                 });
-                 currentTaskText.dispatchEvent(dblclickEvent);
-             }
-            newMenuPopup.classList.add('hidden');
-            task.classList.remove('menu-open'); // Remove class when closing
-        });
-
-        newDuplicateButton.addEventListener('click', () => {
-            this.duplicateTask(task);
-            newMenuPopup.classList.add('hidden');
-            task.classList.remove('menu-open'); // Remove class when closing
-        });
-
-        newDeleteButton.addEventListener('click', () => {
-            task.remove();
-            newMenuPopup.classList.add('hidden');
-            task.classList.remove('menu-open'); // Remove class when closing
-            this.saveToLocalStorage();
-        });
-
-        newTaskCheck.addEventListener('change', (e) => {
-            task.classList.toggle('completed', e.target.checked);
-            this.saveToLocalStorage();
-        });
-
-        // Close menu when clicking outside
-        document.addEventListener('click', (e) => {
-            // Check if the click was outside *any* menu or menu button
-            // Also check if it's not inside an active input for editing
-            if (!e.target.closest('.task-menu-popup') && !e.target.closest('.task-menu') && !e.target.classList.contains('task-text-edit')) {
-                 closeAllMenus();
+            if (isHidden) {
+                menuPopup.classList.remove('hidden');
+                task.classList.add('menu-open'); 
+            } else {
+                menuPopup.classList.add('hidden');
+                task.classList.remove('menu-open'); 
             }
         });
 
+        editButton.addEventListener('click', () => {
+            const currentTaskTextElement = task.querySelector('.task-text'); 
+            if (currentTaskTextElement) {
+                const dblclickEvent = new MouseEvent('dblclick', {
+                    bubbles: true,
+                    cancelable: true,
+                    view: window
+                });
+                currentTaskTextElement.dispatchEvent(dblclickEvent);
+            }
+            menuPopup.classList.add('hidden'); 
+            task.classList.remove('menu-open'); 
+        });
 
-         if (newMenuPopup) {
-             newMenuPopup.addEventListener('click', (e) => {
-                 e.stopPropagation(); // Prevent document click listener from closing when clicking inside the popup
-             });
-         }
+        moveButton.addEventListener('click', () => { 
+            this.openMoveTaskPopup(task); 
+            menuPopup.classList.add('hidden'); 
+            task.classList.remove('menu-open'); 
+        });
+
+        deleteButton.addEventListener('click', () => {
+            task.remove();
+            menuPopup.classList.add('hidden'); 
+            task.classList.remove('menu-open'); 
+            this.saveToLocalStorage(); 
+        });
+
+        taskCheck.addEventListener('change', (e) => {
+            task.classList.toggle('completed', e.target.checked);
+            this.saveToLocalStorage(); 
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.task-menu-popup') && !e.target.closest('.task-menu') && !e.target.classList.contains('task-text-edit') && !e.target.closest('.move-task-popup')) {
+                document.querySelectorAll('.task-menu-popup:not(.hidden)').forEach(popup => {
+                    popup.classList.add('hidden');
+                    popup.closest('.task')?.classList.remove('menu-open');
+                });
+            }
+        });
+
+        if (menuPopup) {
+            menuPopup.addEventListener('click', (e) => {
+                e.stopPropagation();
+            });
+        }
     }
 
-    duplicateTask(task) {
-        const newTask = task.cloneNode(true);
-        newTask.classList.remove('completed', 'menu-open', 'editing'); // Remove completed, menu-open, and editing classes
-        newTask.querySelector('.task-check').checked = false;
+    openMoveTaskPopup(taskElement) {
+        const overlay = document.getElementById('moveTaskPopupOverlay');
+        const popup = document.getElementById('moveTaskPopup');
+        const daySelect = popup.querySelector('.move-day-select');
 
-        // Ensure task text is a span, not an input
-        const currentTaskTextElement = newTask.querySelector('.task-text-edit') || newTask.querySelector('.task-text');
-        if (currentTaskTextElement.tagName === 'INPUT') {
-             const span = document.createElement('span');
-             span.classList.add('task-text');
-             span.textContent = currentTaskTextElement.value.trim() || 'Nueva tarea';
-             currentTaskTextElement.replaceWith(span);
+        if (!overlay || !popup || !daySelect) {
+            console.error("Move task popup elements not found.");
+            return;
         }
 
+        this.taskToMove = taskElement;
 
-        const newMenuPopup = newTask.querySelector('.task-menu-popup');
-        if (newMenuPopup) {
-            newMenuPopup.classList.add('hidden'); // Ensure duplicated menu is hidden
-        }
-
-        this.setupTaskEventListeners(newTask); // Setup listeners for the new task
-
-        // Append or insert based on original task's parent
-        const parentList = task.parentNode;
-        if (parentList) {
-             parentList.insertBefore(newTask, task.nextSibling);
-             // Re-apply priority/other class based on the list it's in
-             if (parentList.classList.contains('priority-tasks')) {
-                 newTask.classList.add('priority-task');
-             } else {
-                 newTask.classList.add('other-task');
-             }
+        const currentDayTitle = taskElement.closest('.day-card').querySelector('.day-title')?.textContent;
+        if (currentDayTitle) {
+            daySelect.value = currentDayTitle;
         } else {
-             console.error("Could not find parent node to duplicate task.");
+            daySelect.selectedIndex = 0;
         }
 
-        this.saveToLocalStorage();
+        this.closeAllPopups(); 
+        overlay.classList.add('active');
+        popup.classList.remove('hidden');
+    }
+
+    handleMoveTaskAccept() {
+        console.log('Move task accept triggered'); 
+        if (!this.taskToMove) {
+            console.error("No task selected to move.");
+            this.closeAllPopups();
+            return;
+        }
+
+        const popup = document.getElementById('moveTaskPopup');
+        const daySelect = popup.querySelector('.move-day-select');
+        const targetDayTitle = daySelect.value;
+
+        if (!targetDayTitle) {
+            console.warn("No target day selected.");
+            this.closeAllPopups();
+            return;
+        }
+
+        const targetDayCard = Array.from(document.querySelectorAll('.day-card'))
+            .find(card => card.querySelector('.day-title')?.textContent === targetDayTitle);
+
+        if (!targetDayCard) {
+            console.error(`Target day card not found for day: ${targetDayTitle}`);
+            this.closeAllPopups();
+            return;
+        }
+
+        const targetOtherTasksList = targetDayCard.querySelector('.other-tasks');
+        if (!targetOtherTasksList) {
+            console.error(`'Other tasks' list not found in target day card for day: ${targetDayTitle}`);
+            this.closeAllPopups();
+            return;
+        }
+
+        const clonedTask = this.taskToMove.cloneNode(true);
+
+        clonedTask.classList.remove('editing', 'menu-open');
+        const activeInput = clonedTask.querySelector('.task-text-edit');
+        if(activeInput) {
+            const taskTextSpan = document.createElement('span');
+            taskTextSpan.classList.add('task-text');
+            taskTextSpan.textContent = activeInput.value.trim() || 'Nueva tarea';
+            activeInput.replaceWith(taskTextSpan);
+        }
+        const menuPopup = clonedTask.querySelector('.task-menu-popup');
+        if(menuPopup) {
+            menuPopup.classList.add('hidden'); 
+        }
+
+        const clonedTaskCheck = clonedTask.querySelector('.task-check');
+        if (clonedTaskCheck) {
+            clonedTaskCheck.checked = false;
+            clonedTask.classList.remove('completed');
+        }
+
+        this.taskToMove.remove();
+
+        targetOtherTasksList.appendChild(clonedTask);
+
+        clonedTask.classList.remove('priority-task');
+        clonedTask.classList.add('other-task');
+
+        this.setupTaskEventListeners(clonedTask);
+
+        this.taskToMove = null;
+
+        this.closeAllPopups();
+        this.saveToLocalStorage(); 
     }
 
     moveCompletedTasks() {
+        console.log('Move completed tasks triggered'); 
         const completedTasksList = document.querySelector('.completed-tasks-list');
 
-        // Clear existing list and remove menu-open class from all tasks
         completedTasksList.innerHTML = '';
         document.querySelectorAll('.task.menu-open').forEach(task => task.classList.remove('menu-open'));
+        document.querySelectorAll('.task-menu-popup').forEach(popup => popup.classList.add('hidden'));
 
-        document.querySelectorAll('.task.completed').forEach(task => {
-            const taskText = task.querySelector('.task-text')?.textContent || '';
+        document.querySelectorAll('.task.completed')
+            .forEach(task => {
+            const taskText = task.querySelector('.task-text')?.textContent || task.querySelector('.task-text-edit')?.value || ''; 
             const originalDay = task.closest('.day-card').querySelector('.day-title')?.textContent || null;
 
             const completedTaskElement = this.createCompletedTaskElement(taskText, originalDay);
 
             completedTasksList.appendChild(completedTaskElement);
 
-            task.remove();
+            task.remove(); 
         });
 
-        this.saveToLocalStorage();
+        this.saveToLocalStorage(); 
     }
 
     createCompletedTaskElement(text, originalDay) {
@@ -383,8 +480,8 @@ class TaskManager {
 
         div.querySelector('.completed-delete-btn').addEventListener('click', () => {
             if (confirm('¿Está seguro de que desea eliminar esta tarea completada de forma permanente?')) {
-                 div.remove();
-                 this.saveToLocalStorage(); // Save state after deletion
+                div.remove();
+                this.saveToLocalStorage(); 
             }
         });
 
@@ -392,37 +489,37 @@ class TaskManager {
     }
 
     restoreTask(taskElement, originalDay) {
+        console.log('Restore task triggered'); 
         let targetDayCard = Array.from(document.querySelectorAll('.day-card'))
             .find(card => card.querySelector('.day-title')?.textContent === originalDay);
 
         if (!targetDayCard) {
-            // Fallback to the first day card if the original day is not found
             targetDayCard = document.querySelector('.day-card');
-             if (!targetDayCard) {
-                 console.error("Could not find any day card to restore the task.");
-                 return;
-             }
-             console.warn(`Original day "${originalDay}" not found or no day cards available. Restoring to the first day card.`);
+            if (!targetDayCard) {
+                console.error("Could not find any day card to restore the task.");
+                return;
+            }
+            console.warn(`Original day "${originalDay}" not found. Restoring to the first day card.`);
         }
 
         const newTask = this.createTaskElement(taskElement.querySelector('.task-text').textContent, false);
 
-        // Restore to 'other-tasks' list by default
         const otherTasksList = targetDayCard.querySelector('.other-tasks');
-         if (otherTasksList) {
-             otherTasksList.appendChild(newTask);
-             newTask.classList.add('other-task');
-         } else {
-             console.error("Could not find '.other-tasks' list in the target day card.");
-             return;
-         }
+        if (otherTasksList) {
+            otherTasksList.appendChild(newTask);
+            newTask.classList.add('other-task'); 
+        } else {
+            console.error("Could not find '.other-tasks' list in the target day card.");
+            return;
+        }
 
-        taskElement.remove();
+        taskElement.remove(); 
 
-        this.saveToLocalStorage();
+        this.saveToLocalStorage(); 
     }
 
     saveToLocalStorage() {
+        console.log('Saving to localStorage...'); 
         const data = {
             tasks: {},
             completedTasks: []
@@ -431,114 +528,120 @@ class TaskManager {
         document.querySelectorAll('.day-card').forEach(dayCard => {
             const dayTitle = dayCard.querySelector('.day-title')?.textContent;
             if (dayTitle) {
-                 data.tasks[dayTitle] = {
-                     priority: Array.from(dayCard.querySelector('.priority-tasks')?.children || []).map(task => {
-                         const textElement = task.querySelector('.task-text-edit') || task.querySelector('.task-text');
-                         return {
-                             text: textElement?.value || textElement?.textContent || '',
-                             completed: task.classList.contains('completed')
-                         };
-                     }),
-                     other: Array.from(dayCard.querySelector('.other-tasks')?.children || []).map(task => {
-                          const textElement = task.querySelector('.task-text-edit') || task.querySelector('.task-text');
-                          return {
-                              text: textElement?.value || textElement?.textContent || '',
-                              completed: task.classList.contains('completed')
-                          };
-                     })
-                 };
+                data.tasks[dayTitle] = {
+                    priority: Array.from(dayCard.querySelector('.priority-tasks')?.children || [])
+                        .filter(task => task.classList.contains('task') && !task.classList.contains('sortable-ghost') && !task.classList.contains('sortable-drag')) 
+                        .map(task => {
+                        const textElement = task.querySelector('.task-text-edit') || task.querySelector('.task-text');
+                        const taskText = textElement ? (textElement.value?.trim() || textElement.textContent?.trim() || '') : '';
+                        return {
+                            text: taskText,
+                            completed: task.classList.contains('completed')
+                        };
+                    }),
+                    other: Array.from(dayCard.querySelector('.other-tasks')?.children || [])
+                        .filter(task => task.classList.contains('task') && !task.classList.contains('sortable-ghost') && !task.classList.contains('sortable-drag')) 
+                        .map(task => {
+                        const textElement = task.querySelector('.task-text-edit') || task.querySelector('.task-text');
+                        const taskText = textElement ? (textElement.value?.trim() || textElement.textContent?.trim() || '') : '';
+                        return {
+                            text: taskText,
+                            completed: task.classList.contains('completed')
+                        };
+                    })
+                };
             }
         });
 
         const completedTasksList = document.querySelector('.completed-tasks-list');
-         if (completedTasksList) {
-             data.completedTasks = Array.from(completedTasksList.children).map(task => ({
-                 text: task.querySelector('.task-text')?.textContent || '',
-                 completed: true,
-                 originalDay: task.querySelector('.completed-restore-btn')?.dataset.originalDay || null
-             }));
-         }
-
+        if (completedTasksList) {
+            data.completedTasks = Array.from(completedTasksList.children)
+                .filter(task => task.classList.contains('completed-task')) 
+                .map(task => ({
+                text: task.querySelector('.task-text')?.textContent.trim() || '',
+                completed: true, 
+                originalDay: task.querySelector('.completed-restore-btn')?.dataset.originalDay || null
+            }));
+        }
+        console.log('Data being saved:', JSON.parse(JSON.stringify(data))); 
         localStorage.setItem('taskManagerData', JSON.stringify(data));
     }
 
     loadFromLocalStorage() {
         const savedData = localStorage.getItem('taskManagerData');
-        if (!savedData) return;
+        if (!savedData) {
+            console.log('No saved data found in localStorage.');
+            return;
+        }
 
         try {
             const data = JSON.parse(savedData);
+            console.log('Loading from localStorage. Data:', data); 
+
+            this.setupDays();
 
             if (data.tasks) {
-                 // Re-render days based on the current day first, then populate from loaded data
-                 this.setupDays(); // Ensure days are set up before loading data into them
+                Object.entries(data.tasks).forEach(([dayTitle, dayData]) => {
+                    const dayCard = Array.from(document.querySelectorAll('.day-card'))
+                        .find(card => card.querySelector('.day-title')?.textContent === dayTitle);
 
-                 Object.entries(data.tasks).forEach(([dayTitle, dayData]) => {
-                     const dayCard = Array.from(document.querySelectorAll('.day-card'))
-                         .find(card => card.querySelector('.day-title')?.textContent === dayTitle);
+                    if (dayCard) {
+                        const priorityList = dayCard.querySelector('.priority-tasks');
+                        const otherList = dayCard.querySelector('.other-tasks');
 
-                     if (dayCard) {
-                         const priorityList = dayCard.querySelector('.priority-tasks');
-                         const otherList = dayCard.querySelector('.other-tasks');
+                        if (priorityList && otherList) {
+                            priorityList.innerHTML = ''; 
+                            otherList.innerHTML = ''; 
 
-                         if (priorityList && otherList) {
-                             priorityList.innerHTML = '';
-                             otherList.innerHTML = '';
+                            if (dayData.priority && Array.isArray(dayData.priority)) {
+                                dayData.priority.forEach(taskData => {
+                                    if (taskData && typeof taskData.text === 'string') {
+                                        const task = this.createTaskElement(taskData.text, taskData.completed);
+                                        task.classList.add('priority-task'); 
+                                        priorityList.appendChild(task);
+                                    }
+                                });
+                            }
 
-                             if (dayData.priority && Array.isArray(dayData.priority)) {
-                                 dayData.priority.forEach(taskData => {
-                                     if (taskData && typeof taskData.text === 'string') { // Basic validation
-                                         const task = this.createTaskElement(taskData.text, taskData.completed);
-                                         priorityList.appendChild(task);
-                                     }
-                                 });
-                             }
-
-                             if (dayData.other && Array.isArray(dayData.other)) {
-                                 dayData.other.forEach(taskData => {
-                                      if (taskData && typeof taskData.text === 'string') { // Basic validation
-                                         const task = this.createTaskElement(taskData.text, taskData.completed);
-                                         otherList.appendChild(task);
-                                      }
-                                 });
-                             }
-                         } else {
-                             console.warn(`Priority or Other tasks list not found for day: ${dayTitle}`);
-                         }
-                     } else {
-                         // This case happens if a day title was saved but doesn't match current days (e.g., changing language or logic)
-                         console.warn(`Day card not found for day title from loaded data: ${dayTitle}`);
-                         // Decide how to handle orphaned tasks - currently discards them.
-                         // Could potentially add them to the first day as a fallback.
-                     }
-                 });
+                            if (dayData.other && Array.isArray(dayData.other)) {
+                                dayData.other.forEach(taskData => {
+                                    if (taskData && typeof taskData.text === 'string') {
+                                        const task = this.createTaskElement(taskData.text, taskData.completed);
+                                        task.classList.add('other-task'); 
+                                        otherList.appendChild(task);
+                                    }
+                                });
+                            }
+                        } else {
+                            console.warn(`Priority or Other tasks list not found for day: ${dayTitle} during load.`);
+                        }
+                    } else {
+                        console.warn(`Day card not found for day title "${dayTitle}" from loaded data. Tasks for this day are discarded.`);
+                    }
+                });
             } else {
                 console.warn("No 'tasks' data found in localStorage.");
             }
 
             const completedTasksList = document.querySelector('.completed-tasks-list');
             if (completedTasksList) {
-                completedTasksList.innerHTML = '';
-                 if (data.completedTasks && Array.isArray(data.completedTasks)) {
+                completedTasksList.innerHTML = ''; 
+                if (data.completedTasks && Array.isArray(data.completedTasks)) {
                     data.completedTasks.forEach(taskData => {
-                         if (taskData && typeof taskData.text === 'string') { // Basic validation
+                        if (taskData && typeof taskData.text === 'string') {
                             const completedTaskElement = this.createCompletedTaskElement(taskData.text, taskData.originalDay);
-                             completedTasksList.appendChild(completedTaskElement);
-                         }
-                     });
-                 }
+                            completedTasksList.appendChild(completedTaskElement);
+                        }
+                    });
+                }
             } else {
-                console.warn("Completed tasks list element not found.");
+                console.warn("Completed tasks list element not found during load.");
             }
 
-            // Re-initialize sortable after loading tasks
             this.initializeSortable();
 
         } catch (error) {
             console.error("Failed to parse or load data from localStorage:", error);
-            // Optionally clear broken data or show an error message
-            // localStorage.removeItem('taskManagerData');
-            // alert("Error al cargar los datos guardados.");
         }
     }
 
@@ -556,7 +659,7 @@ class TaskManager {
 
         const now = new Date();
         const day = String(now.getDate()).padStart(2, '0');
-        const month = String(now.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
+        const month = String(now.getMonth() + 1).padStart(2, '0'); 
         const year = now.getFullYear();
         const hours = String(now.getHours()).padStart(2, '0');
         const minutes = String(now.getMinutes()).padStart(2, '0');
@@ -581,14 +684,21 @@ class TaskManager {
         input.accept = '.json';
         input.onchange = e => {
             const file = e.target.files[0];
+            if (!file) return;
+
             const reader = new FileReader();
             reader.onload = event => {
                 try {
                     const data = JSON.parse(event.target.result);
-                    localStorage.setItem('taskManagerData', JSON.stringify(data));
-                    this.loadFromLocalStorage();
+                    if (data && typeof data === 'object' && data.tasks && data.completedTasks) {
+                        localStorage.setItem('taskManagerData', JSON.stringify(data));
+                        this.loadFromLocalStorage(); 
+                        alert('Datos importados correctamente.');
+                    } else {
+                        alert('El archivo seleccionado no parece contener datos válidos del planificador.');
+                    }
                 } catch (error) {
-                    alert('Error al importar el archivo');
+                    alert('Error al importar el archivo')
                 }
             };
             reader.readAsText(file);
