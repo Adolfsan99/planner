@@ -13,7 +13,7 @@ class TaskManager {
         this.initializeSortable();
         this.setupCompletedTasksPopup();
         this.setupImportExport();
-        this.setupMoveTaskPopup(); 
+        this.setupMoveTaskPopup();
     }
 
     setupDays() {
@@ -28,14 +28,14 @@ class TaskManager {
             ...this.days.slice(0, todayIndex)
         ];
 
-        container.innerHTML = ''; 
+        container.innerHTML = '';
 
         reorderedDays.forEach(day => {
             const dayElement = template.content.cloneNode(true);
             const dayCard = dayElement.querySelector('.day-card');
             dayElement.querySelector('.day-title').textContent = day;
 
-            if (day === this.days[todayIndex]) { 
+            if (day === this.days[todayIndex]) {
                 dayCard.classList.add('current-day');
             }
 
@@ -56,25 +56,25 @@ class TaskManager {
     }
 
     setupCompletedTasksPopup() {
-        const overlay = document.getElementById('moveTaskPopupOverlay'); 
+        const overlay = document.getElementById('moveTaskPopupOverlay');
         if (!overlay) {
             console.error("Overlay element not found.");
             return;
         }
-        overlay.classList.add('generic-overlay'); 
+        overlay.classList.add('generic-overlay');
 
         const completedContainer = document.getElementById('completedTasks');
         if (!completedContainer.querySelector('.close-popup')) {
             const closeButton = document.createElement('button');
             closeButton.className = 'close-popup';
             closeButton.innerHTML = '×';
-            closeButton.addEventListener('click', this.closeAllPopups.bind(this)); 
+            closeButton.addEventListener('click', this.closeAllPopups.bind(this));
             completedContainer.insertBefore(closeButton, completedContainer.firstChild);
         }
 
 
         document.getElementById('showCompleted').addEventListener('click', () => {
-            this.closeAllPopups(); 
+            this.closeAllPopups();
             overlay.classList.add('active');
             completedContainer.classList.remove('hidden');
         });
@@ -131,11 +131,27 @@ class TaskManager {
             movePopup.classList.add('hidden');
         }
 
+        this.closeAllMenus(); 
+    }
+
+    closeAllMenus(exceptTask = null) {
         document.querySelectorAll('.task-menu-popup:not(.hidden)').forEach(popup => {
-            popup.classList.add('hidden');
-            popup.closest('.task')?.classList.remove('menu-open');
+            const taskElement = popup.closest('.task');
+            if (taskElement !== exceptTask) {
+                popup.classList.add('hidden');
+                taskElement?.classList.remove('menu-open');
+            }
+        });
+         document.querySelectorAll('.task.editing').forEach(task => {
+            const input = task.querySelector('.task-text-edit');
+            const span = task.querySelector('.task-text');
+            if (input && span) {
+                input.replaceWith(span);
+                task.classList.remove('editing');
+            }
         });
     }
+
 
     initializeSortable() {
         document.querySelectorAll('.tasks-list').forEach(list => {
@@ -145,12 +161,12 @@ class TaskManager {
 
             list.sortable = new Sortable(list, {
                 group: 'tasks',
-                animation: 0, 
+                animation: 0,
                 draggable: '.task',
                 handle: '.task-text',
                 onMove: function (evt) {
                     if (evt.to.classList.contains('priority-tasks')) {
-                        const priorityTasks = evt.to.querySelectorAll('.task:not(.sortable-ghost):not(.sortable-drag)'); 
+                        const priorityTasks = evt.to.querySelectorAll('.task:not(.sortable-ghost):not(.sortable-drag)');
                         if (priorityTasks.length >= 3 && !evt.from.classList.contains('priority-tasks')) {
                             return false;
                         }
@@ -166,14 +182,15 @@ class TaskManager {
                         taskTextSpan.classList.add('task-text');
                         taskTextSpan.textContent = activeInput.value.trim() || 'Nueva tarea';
                         activeInput.replaceWith(taskTextSpan);
+                        taskElement.classList.remove('editing');
                     }
-                    this.setupTaskEventListeners(taskElement); 
+                    this.setupTaskEventListeners(taskElement);
 
 
                     taskElement.classList.remove('priority-task', 'other-task');
                     if (evt.to.classList.contains('priority-tasks')) {
                         taskElement.classList.add('priority-task');
-                    } else { 
+                    } else {
                         taskElement.classList.add('other-task');
                     }
 
@@ -184,10 +201,10 @@ class TaskManager {
                     this.saveToLocalStorage();
                 },
                 onRemove: () => {
-                    this.saveToLocalStorage(); 
+                    this.saveToLocalStorage();
                 },
                 onUpdate: () => {
-                    this.saveToLocalStorage(); 
+                    this.saveToLocalStorage();
                 },
             });
         });
@@ -198,7 +215,7 @@ class TaskManager {
         const otherTasksList = dayCard.querySelector('.other-tasks');
         const task = this.createTaskElement('Nueva tarea');
         otherTasksList.appendChild(task);
-        task.classList.add('other-task'); 
+        task.classList.add('other-task');
         this.saveToLocalStorage();
     }
 
@@ -225,11 +242,11 @@ class TaskManager {
         const menuButton = task.querySelector('.task-menu');
         const menuPopup = task.querySelector('.task-menu-popup');
         const editButton = task.querySelector('.edit-task');
-        const moveButton = task.querySelector('.move-task'); 
+        const moveButton = task.querySelector('.move-task');
         const deleteButton = task.querySelector('.delete-task');
         const taskCheck = task.querySelector('.task-check');
 
-        taskText.addEventListener('dblclick', () => {
+        taskText.addEventListener('dblclick', () => { 
             this.closeAllMenus(task); 
 
             const input = document.createElement('input');
@@ -240,16 +257,13 @@ class TaskManager {
 
             const saveEdit = () => {
                 const newText = input.value.trim();
-                if (input.parentNode) { 
-                    taskText.textContent = newText || 'Nueva tarea'; 
-                    input.replaceWith(taskText); 
-                    task.classList.remove('editing'); 
-                    if (newText !== taskText.textContent.trim() && newText !== '') { 
-                        this.saveToLocalStorage();
-                        this.exportData(); 
-                    } else if (newText === '') { 
-                        this.saveToLocalStorage();
-                        this.exportData();
+                if (input.parentNode) {
+                    taskText.textContent = newText || 'Nueva tarea';
+                    input.replaceWith(taskText);
+                    task.classList.remove('editing');
+                    // Save only if text actually changed or was cleared
+                    if (newText !== taskText.textContent.trim() || newText === '') {
+                         this.saveToLocalStorage();
                     }
                 }
             };
@@ -258,48 +272,39 @@ class TaskManager {
 
             input.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter') {
-                    e.preventDefault(); 
+                    e.preventDefault();
                     saveEdit();
                 } else if (e.key === 'Escape') {
                     if (input.parentNode) {
-                        input.replaceWith(taskText); 
-                        task.classList.remove('editing'); 
+                        input.replaceWith(taskText);
+                        task.classList.remove('editing');
                     }
                 }
             });
 
-            taskText.replaceWith(input); 
+            taskText.replaceWith(input);
             input.focus();
-            input.select(); 
-            task.classList.add('editing'); 
+            input.select();
+            task.classList.add('editing');
         });
 
-        const closeAllMenus = (exceptTask = null) => {
-            document.querySelectorAll('.task-menu-popup:not(.hidden)').forEach(popup => {
-                const taskElement = popup.closest('.task');
-                if (taskElement !== exceptTask) { 
-                    popup.classList.add('hidden');
-                    taskElement?.classList.remove('menu-open'); 
-                }
-            });
-        };
 
-        menuButton.addEventListener('click', (e) => {
-            e.stopPropagation(); 
+        menuButton.addEventListener('click', (e) => { 
+            e.stopPropagation();
             const isHidden = menuPopup.classList.contains('hidden');
-            closeAllMenus(task); 
+            this.closeAllMenus(task); 
 
             if (isHidden) {
                 menuPopup.classList.remove('hidden');
-                task.classList.add('menu-open'); 
+                task.classList.add('menu-open');
             } else {
                 menuPopup.classList.add('hidden');
-                task.classList.remove('menu-open'); 
+                task.classList.remove('menu-open');
             }
         });
 
         editButton.addEventListener('click', () => {
-            const currentTaskTextElement = task.querySelector('.task-text'); 
+            const currentTaskTextElement = task.querySelector('.task-text');
             if (currentTaskTextElement) {
                 const dblclickEvent = new MouseEvent('dblclick', {
                     bubbles: true,
@@ -308,36 +313,34 @@ class TaskManager {
                 });
                 currentTaskTextElement.dispatchEvent(dblclickEvent);
             }
-            menuPopup.classList.add('hidden'); 
-            task.classList.remove('menu-open'); 
+            menuPopup.classList.add('hidden');
+            task.classList.remove('menu-open');
         });
 
         moveButton.addEventListener('click', () => { 
             this.openMoveTaskPopup(task); 
-            menuPopup.classList.add('hidden'); 
-            task.classList.remove('menu-open'); 
+            menuPopup.classList.add('hidden');
+            task.classList.remove('menu-open');
         });
 
-        deleteButton.addEventListener('click', () => {
+        deleteButton.addEventListener('click', () => { 
             task.remove();
-            menuPopup.classList.add('hidden'); 
-            task.classList.remove('menu-open'); 
+            menuPopup.classList.add('hidden');
+            task.classList.remove('menu-open');
             this.saveToLocalStorage(); 
         });
 
-        taskCheck.addEventListener('change', (e) => {
+        taskCheck.addEventListener('change', (e) => { 
             task.classList.toggle('completed', e.target.checked);
             this.saveToLocalStorage(); 
         });
 
-        document.addEventListener('click', (e) => {
-            if (!e.target.closest('.task-menu-popup') && !e.target.closest('.task-menu') && !e.target.classList.contains('task-text-edit') && !e.target.closest('.move-task-popup')) {
-                document.querySelectorAll('.task-menu-popup:not(.hidden)').forEach(popup => {
-                    popup.classList.add('hidden');
-                    popup.closest('.task')?.classList.remove('menu-open');
-                });
+        document.addEventListener('click', (e) => { 
+            if (!e.target.closest('.task-menu-popup') && !e.target.closest('.task-menu') && !e.target.closest('.task') && !e.target.closest('.move-task-popup') && !e.target.classList.contains('task-text-edit')) {
+                 this.closeAllMenus(); 
             }
         });
+
 
         if (menuPopup) {
             menuPopup.addEventListener('click', (e) => {
@@ -365,13 +368,13 @@ class TaskManager {
             daySelect.selectedIndex = 0;
         }
 
-        this.closeAllPopups(); 
+        this.closeAllPopups();
         overlay.classList.add('active');
         popup.classList.remove('hidden');
     }
 
     handleMoveTaskAccept() {
-        console.log('Move task accept triggered'); 
+        console.log('Move task accept triggered');
         if (!this.taskToMove) {
             console.error("No task selected to move.");
             this.closeAllPopups();
@@ -416,7 +419,7 @@ class TaskManager {
         }
         const menuPopup = clonedTask.querySelector('.task-menu-popup');
         if(menuPopup) {
-            menuPopup.classList.add('hidden'); 
+            menuPopup.classList.add('hidden');
         }
 
         const clonedTaskCheck = clonedTask.querySelector('.task-check');
@@ -437,11 +440,11 @@ class TaskManager {
         this.taskToMove = null;
 
         this.closeAllPopups();
-        this.saveToLocalStorage(); 
+        this.saveToLocalStorage();
     }
 
     moveCompletedTasks() {
-        console.log('Move completed tasks triggered'); 
+        console.log('Move completed tasks triggered');
         const completedTasksList = document.querySelector('.completed-tasks-list');
 
         completedTasksList.innerHTML = '';
@@ -450,17 +453,17 @@ class TaskManager {
 
         document.querySelectorAll('.task.completed')
             .forEach(task => {
-            const taskText = task.querySelector('.task-text')?.textContent || task.querySelector('.task-text-edit')?.value || ''; 
+            const taskText = task.querySelector('.task-text')?.textContent || task.querySelector('.task-text-edit')?.value || '';
             const originalDay = task.closest('.day-card').querySelector('.day-title')?.textContent || null;
 
             const completedTaskElement = this.createCompletedTaskElement(taskText, originalDay);
 
             completedTasksList.appendChild(completedTaskElement);
 
-            task.remove(); 
+            task.remove();
         });
 
-        this.saveToLocalStorage(); 
+        this.saveToLocalStorage();
     }
 
     createCompletedTaskElement(text, originalDay) {
@@ -481,7 +484,7 @@ class TaskManager {
         div.querySelector('.completed-delete-btn').addEventListener('click', () => {
             if (confirm('¿Está seguro de que desea eliminar esta tarea completada de forma permanente?')) {
                 div.remove();
-                this.saveToLocalStorage(); 
+                this.saveToLocalStorage();
             }
         });
 
@@ -489,7 +492,7 @@ class TaskManager {
     }
 
     restoreTask(taskElement, originalDay) {
-        console.log('Restore task triggered'); 
+        console.log('Restore task triggered');
         let targetDayCard = Array.from(document.querySelectorAll('.day-card'))
             .find(card => card.querySelector('.day-title')?.textContent === originalDay);
 
@@ -507,19 +510,19 @@ class TaskManager {
         const otherTasksList = targetDayCard.querySelector('.other-tasks');
         if (otherTasksList) {
             otherTasksList.appendChild(newTask);
-            newTask.classList.add('other-task'); 
+            newTask.classList.add('other-task');
         } else {
             console.error("Could not find '.other-tasks' list in the target day card.");
             return;
         }
 
-        taskElement.remove(); 
+        taskElement.remove();
 
-        this.saveToLocalStorage(); 
+        this.saveToLocalStorage();
     }
 
     saveToLocalStorage() {
-        console.log('Saving to localStorage...'); 
+        console.log('Saving to localStorage...');
         const data = {
             tasks: {},
             completedTasks: []
@@ -530,23 +533,25 @@ class TaskManager {
             if (dayTitle) {
                 data.tasks[dayTitle] = {
                     priority: Array.from(dayCard.querySelector('.priority-tasks')?.children || [])
-                        .filter(task => task.classList.contains('task') && !task.classList.contains('sortable-ghost') && !task.classList.contains('sortable-drag')) 
+                        .filter(task => task.classList.contains('task') && !task.classList.contains('sortable-ghost') && !task.classList.contains('sortable-drag'))
                         .map(task => {
                         const textElement = task.querySelector('.task-text-edit') || task.querySelector('.task-text');
                         const taskText = textElement ? (textElement.value?.trim() || textElement.textContent?.trim() || '') : '';
+                         const isCompleted = task.classList.contains('completed') || task.querySelector('.task-check')?.checked || false;
                         return {
                             text: taskText,
-                            completed: task.classList.contains('completed')
+                            completed: isCompleted
                         };
                     }),
                     other: Array.from(dayCard.querySelector('.other-tasks')?.children || [])
-                        .filter(task => task.classList.contains('task') && !task.classList.contains('sortable-ghost') && !task.classList.contains('sortable-drag')) 
+                        .filter(task => task.classList.contains('task') && !task.classList.contains('sortable-ghost') && !task.classList.contains('sortable-drag'))
                         .map(task => {
                         const textElement = task.querySelector('.task-text-edit') || task.querySelector('.task-text');
                         const taskText = textElement ? (textElement.value?.trim() || textElement.textContent?.trim() || '') : '';
+                         const isCompleted = task.classList.contains('completed') || task.querySelector('.task-check')?.checked || false;
                         return {
                             text: taskText,
-                            completed: task.classList.contains('completed')
+                            completed: isCompleted
                         };
                     })
                 };
@@ -556,14 +561,14 @@ class TaskManager {
         const completedTasksList = document.querySelector('.completed-tasks-list');
         if (completedTasksList) {
             data.completedTasks = Array.from(completedTasksList.children)
-                .filter(task => task.classList.contains('completed-task')) 
+                .filter(task => task.classList.contains('completed-task'))
                 .map(task => ({
                 text: task.querySelector('.task-text')?.textContent.trim() || '',
-                completed: true, 
+                completed: true, // Completed tasks are always completed
                 originalDay: task.querySelector('.completed-restore-btn')?.dataset.originalDay || null
             }));
         }
-        console.log('Data being saved:', JSON.parse(JSON.stringify(data))); 
+        console.log('Data being saved:', JSON.parse(JSON.stringify(data)));
         localStorage.setItem('taskManagerData', JSON.stringify(data));
     }
 
@@ -576,7 +581,7 @@ class TaskManager {
 
         try {
             const data = JSON.parse(savedData);
-            console.log('Loading from localStorage. Data:', data); 
+            console.log('Loading from localStorage. Data:', data);
 
             this.setupDays();
 
@@ -590,14 +595,14 @@ class TaskManager {
                         const otherList = dayCard.querySelector('.other-tasks');
 
                         if (priorityList && otherList) {
-                            priorityList.innerHTML = ''; 
-                            otherList.innerHTML = ''; 
+                            priorityList.innerHTML = '';
+                            otherList.innerHTML = '';
 
                             if (dayData.priority && Array.isArray(dayData.priority)) {
                                 dayData.priority.forEach(taskData => {
                                     if (taskData && typeof taskData.text === 'string') {
                                         const task = this.createTaskElement(taskData.text, taskData.completed);
-                                        task.classList.add('priority-task'); 
+                                        task.classList.add('priority-task');
                                         priorityList.appendChild(task);
                                     }
                                 });
@@ -607,7 +612,7 @@ class TaskManager {
                                 dayData.other.forEach(taskData => {
                                     if (taskData && typeof taskData.text === 'string') {
                                         const task = this.createTaskElement(taskData.text, taskData.completed);
-                                        task.classList.add('other-task'); 
+                                        task.classList.add('other-task');
                                         otherList.appendChild(task);
                                     }
                                 });
@@ -625,7 +630,7 @@ class TaskManager {
 
             const completedTasksList = document.querySelector('.completed-tasks-list');
             if (completedTasksList) {
-                completedTasksList.innerHTML = ''; 
+                completedTasksList.innerHTML = '';
                 if (data.completedTasks && Array.isArray(data.completedTasks)) {
                     data.completedTasks.forEach(taskData => {
                         if (taskData && typeof taskData.text === 'string') {
@@ -659,7 +664,7 @@ class TaskManager {
 
         const now = new Date();
         const day = String(now.getDate()).padStart(2, '0');
-        const month = String(now.getMonth() + 1).padStart(2, '0'); 
+        const month = String(now.getMonth() + 1).padStart(2, '0');
         const year = now.getFullYear();
         const hours = String(now.getHours()).padStart(2, '0');
         const minutes = String(now.getMinutes()).padStart(2, '0');
@@ -692,7 +697,7 @@ class TaskManager {
                     const data = JSON.parse(event.target.result);
                     if (data && typeof data === 'object' && data.tasks && data.completedTasks) {
                         localStorage.setItem('taskManagerData', JSON.stringify(data));
-                        this.loadFromLocalStorage(); 
+                        this.loadFromLocalStorage();
                         alert('Datos importados correctamente.');
                     } else {
                         alert('El archivo seleccionado no parece contener datos válidos del planificador.');
