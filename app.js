@@ -20,8 +20,12 @@ class TaskManager {
         const container = document.querySelector('.days-container');
         const template = document.getElementById('dayTemplate');
 
-        const today = new Date().getDay();
-        const todayIndex = today === 0 ? 6 : today - 1;
+        const today = new Date().getDay(); // 0 for Sunday, 1 for Monday, ..., 6 for Saturday
+        const todayIndex = today === 0 ? 6 : today - 1; // Convert to 0 for Monday, ..., 6 for Sunday
+
+        // Calculate the index for the next day, wrapping around
+        const nextDayIndex = (todayIndex + 1) % 7;
+
 
         const reorderedDays = [
             ...this.days.slice(todayIndex),
@@ -33,11 +37,19 @@ class TaskManager {
         reorderedDays.forEach(day => {
             const dayElement = template.content.cloneNode(true);
             const dayCard = dayElement.querySelector('.day-card');
-            dayElement.querySelector('.day-title').textContent = day;
+            const dayTitleElement = dayElement.querySelector('.day-title');
+            dayTitleElement.textContent = day;
 
-            if (day === this.days[todayIndex]) {
+            // Find the original index of the day to compare with today and nextDay indices
+            const originalDayIndex = this.days.indexOf(day);
+
+
+            if (originalDayIndex === todayIndex) {
                 dayCard.classList.add('current-day');
+            } else if (originalDayIndex === nextDayIndex) { // Check if it's the next day
+                 dayCard.classList.add('next-day');
             }
+
 
             container.appendChild(dayElement);
         });
