@@ -313,10 +313,7 @@ class TaskManager {
                     taskText.textContent = newText || 'Nueva tarea';
                     input.replaceWith(taskText);
                     task.classList.remove('editing');
-                    // Check if the text actually changed before saving
-                    if (newText !== input.value || newText === '') {
-                         this.saveToLocalStorage();
-                    }
+                    this.saveToLocalStorage(); // Save after editing
                 }
             };
 
@@ -610,9 +607,9 @@ class TaskManager {
                     priority: Array.from(dayCard.querySelector('.priority-tasks')?.children || [])
                         .filter(task => task.classList.contains('task') && !task.classList.contains('sortable-ghost') && !task.classList.contains('sortable-drag'))
                         .map(task => {
-                        const textElement = task.querySelector('.task-text') || task.querySelector('.task-text-edit');
-                        const taskText = textElement ? (textElement.value?.trim() || textElement.textContent?.trim() || '') : '';
-                         const isCompleted = task.querySelector('.task-check')?.checked || false;
+                        const textElement = task.querySelector('.task-text');
+                        const taskText = textElement ? textElement.textContent.trim() : '';
+                        const isCompleted = task.querySelector('.task-check')?.checked || false;
                         return {
                             text: taskText,
                             completed: isCompleted
@@ -621,9 +618,9 @@ class TaskManager {
                     other: Array.from(dayCard.querySelector('.other-tasks')?.children || [])
                         .filter(task => task.classList.contains('task') && !task.classList.contains('sortable-ghost') && !task.classList.contains('sortable-drag'))
                         .map(task => {
-                        const textElement = task.querySelector('.task-text') || task.querySelector('.task-text-edit');
-                         const taskText = textElement ? (textElement.value?.trim() || textElement.textContent?.trim() || '') : '';
-                         const isCompleted = task.querySelector('.task-check')?.checked || false;
+                        const textElement = task.querySelector('.task-text');
+                        const taskText = textElement ? textElement.textContent.trim() : '';
+                        const isCompleted = task.querySelector('.task-check')?.checked || false;
                         return {
                             text: taskText,
                             completed: isCompleted
