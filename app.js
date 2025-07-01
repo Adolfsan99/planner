@@ -26,7 +26,6 @@ class TaskManager {
 
         const nextDayIndex = (todayIndex + 1) % 7;
 
-
         const reorderedDays = [
             ...this.days.slice(todayIndex),
             ...this.days.slice(0, todayIndex)
@@ -38,17 +37,32 @@ class TaskManager {
             const dayElement = template.content.cloneNode(true);
             const dayCard = dayElement.querySelector('.day-card');
             const dayTitleElement = dayElement.querySelector('.day-title');
+            const hoursRemainingElement = dayElement.querySelector('.hours-remaining');
             dayTitleElement.textContent = day;
 
             const originalDayIndex = this.days.indexOf(day);
 
-
             if (originalDayIndex === todayIndex) {
                 dayCard.classList.add('current-day');
+                const updateRemainingTime = () => {
+                    const now = new Date();
+                    const midnight = new Date(now);
+                    midnight.setHours(24, 0, 0, 0); // Set to next midnight
+                    const diffMs = midnight.getTime() - now.getTime();
+                    const hours = Math.floor(diffMs / (1000 * 60 * 60));
+                    const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+                    const seconds = Math.floor((diffMs % (1000 * 60)) / 1000);
+
+                    hoursRemainingElement.textContent = `Horas restantes: ${hours}h ${minutes}m ${seconds}s`;
+                    hoursRemainingElement.style.display = 'block';
+                };
+                updateRemainingTime();
+                setInterval(updateRemainingTime, 1000); // Update every second
             } else if (originalDayIndex === nextDayIndex) {
                  dayCard.classList.add('next-day');
+            } else {
+                hoursRemainingElement.style.display = 'none'; // Hide for other days
             }
-
 
             container.appendChild(dayElement);
         });
@@ -87,7 +101,6 @@ class TaskManager {
             closeButton.addEventListener('click', this.closeAllPopups.bind(this));
             completedContainer.insertBefore(closeButton, completedContainer.firstChild);
         }
-
 
         document.getElementById('showCompleted').addEventListener('click', () => {
             this.closeAllPopups();
@@ -497,7 +510,8 @@ class TaskManager {
         const completedTasksInDays = document.querySelectorAll('.day-card .task.completed');
 
         completedTasksInDays.forEach(task => {
-            const taskText = task.querySelector('.task-text')?.textContent || task.querySelector('.task-text-edit')?.value || '';
+            const textElement = task.querySelector('.task-text-edit') || task.querySelector('.task-text');
+            const taskText = textElement ? (textElement.value?.trim() || textElement.textContent?.trim() || '') : '';
             const originalDay = task.closest('.day-card')?.querySelector('.day-title')?.textContent || null;
 
             // Check if a task with the same text and originalDay already exists in completedTasksList
