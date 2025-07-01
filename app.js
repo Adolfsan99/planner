@@ -21,8 +21,8 @@ class TaskManager {
         const container = document.querySelector('.days-container');
         const template = document.getElementById('dayTemplate');
 
-        const today = new Date().getDay(); 
-        const todayIndex = today === 0 ? 6 : today - 1; 
+        const today = new Date().getDay();
+        const todayIndex = today === 0 ? 6 : today - 1;
 
         const nextDayIndex = (todayIndex + 1) % 7;
 
@@ -32,7 +32,7 @@ class TaskManager {
             ...this.days.slice(0, todayIndex)
         ];
 
-        container.innerHTML = ''; 
+        container.innerHTML = '';
 
         reorderedDays.forEach(day => {
             const dayElement = template.content.cloneNode(true);
@@ -45,7 +45,7 @@ class TaskManager {
 
             if (originalDayIndex === todayIndex) {
                 dayCard.classList.add('current-day');
-            } else if (originalDayIndex === nextDayIndex) { 
+            } else if (originalDayIndex === nextDayIndex) {
                  dayCard.classList.add('next-day');
             }
 
@@ -72,7 +72,7 @@ class TaskManager {
             console.error("Overlay element not found.");
             return;
         }
-        overlay.classList.add('generic-overlay'); 
+        overlay.classList.add('generic-overlay');
 
         const completedContainer = document.getElementById('completedTasks');
         if (!completedContainer) {
@@ -85,14 +85,14 @@ class TaskManager {
             closeButton.className = 'close-popup';
             closeButton.innerHTML = '×';
             closeButton.addEventListener('click', this.closeAllPopups.bind(this));
-            completedContainer.insertBefore(closeButton, completedContainer.firstChild); 
+            completedContainer.insertBefore(closeButton, completedContainer.firstChild);
         }
 
 
         document.getElementById('showCompleted').addEventListener('click', () => {
-            this.closeAllPopups(); 
-            overlay.classList.add('active'); 
-            completedContainer.classList.remove('hidden'); 
+            this.closeAllPopups();
+            overlay.classList.add('active');
+            completedContainer.classList.remove('hidden');
         });
 
         overlay.addEventListener('click', (e) => {
@@ -149,7 +149,7 @@ class TaskManager {
             movePopup.classList.add('hidden');
         }
 
-        this.closeAllMenus(); 
+        this.closeAllMenus();
     }
 
     closeAllMenus(exceptTask = null) {
@@ -164,7 +164,7 @@ class TaskManager {
             if (task !== exceptTask) {
                 const input = task.querySelector('.task-text-edit');
                 const span = task.querySelector('.task-text');
-                if (input && span && input.parentNode === task) { 
+                if (input && span && input.parentNode === task) {
                     input.replaceWith(span);
                     task.classList.remove('editing');
                 }
@@ -187,21 +187,21 @@ class TaskManager {
             }
 
             list.sortable = new Sortable(list, {
-                group: 'tasks', 
-                animation: 0, 
-                draggable: '.task', 
-                handle: '.task-text', 
+                group: 'tasks',
+                animation: 0,
+                draggable: '.task',
+                handle: '.task-text',
                 onMove: function (evt) {
                     if (evt.to.classList.contains('priority-tasks')) {
                         const priorityTasks = evt.to.querySelectorAll('.task:not(.sortable-ghost):not(.sortable-drag)');
                         if (priorityTasks.length >= 3 && !evt.from.classList.contains('priority-tasks')) {
-                            return false; 
+                            return false;
                         }
                     }
-                    return true; 
+                    return true;
                 },
                 onAdd: (evt) => {
-                    const taskElement = evt.item; 
+                    const taskElement = evt.item;
 
                     const activeInput = taskElement.querySelector('.task-text-edit');
                     if(activeInput) {
@@ -247,16 +247,16 @@ class TaskManager {
             return;
         }
         const task = this.createTaskElement('Nueva tarea');
-        otherTasksList.appendChild(task); 
-        task.classList.add('other-task'); 
-        this.saveToLocalStorage(); 
+        otherTasksList.appendChild(task);
+        task.classList.add('other-task');
+        this.saveToLocalStorage();
     }
 
     createTaskElement(text, isCompleted = false) {
         const template = document.getElementById('taskTemplate');
         if (!template) {
             console.error("Task template not found.");
-            return null; 
+            return null;
         }
         const taskElement = template.content.cloneNode(true);
 
@@ -275,7 +275,7 @@ class TaskManager {
     }
 
     setupTaskEventListeners(task) {
-        if (!task) return; 
+        if (!task) return;
 
         const taskText = task.querySelector('.task-text');
         const menuButton = task.querySelector('.task-menu');
@@ -286,7 +286,7 @@ class TaskManager {
         const taskCheck = task.querySelector('.task-check');
 
         taskText.addEventListener('dblclick', () => {
-            this.closeAllMenus(task); 
+            this.closeAllMenus(task);
 
             const input = document.createElement('input');
             input.type = 'text';
@@ -297,10 +297,10 @@ class TaskManager {
             const saveEdit = () => {
                 const newText = input.value.trim();
                 if (input.parentNode === task) {
-                    taskText.textContent = newText || 'Nueva tarea'; 
-                    input.replaceWith(taskText); 
-                    task.classList.remove('editing'); 
-                    if (newText !== taskText.textContent || newText === '') { 
+                    taskText.textContent = newText || 'Nueva tarea';
+                    input.replaceWith(taskText);
+                    task.classList.remove('editing');
+                    if (newText !== taskText.textContent || newText === '') {
                          this.saveToLocalStorage();
                     }
                 }
@@ -310,30 +310,30 @@ class TaskManager {
 
             input.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter') {
-                    e.preventDefault(); 
+                    e.preventDefault();
                     saveEdit();
                 } else if (e.key === 'Escape') {
                      if (input.parentNode === task) {
-                        input.replaceWith(taskText); 
-                        task.classList.remove('editing'); 
+                        input.replaceWith(taskText);
+                        task.classList.remove('editing');
                     }
                 }
             });
 
             taskText.replaceWith(input);
-            input.focus(); 
-            input.select(); 
-            task.classList.add('editing'); 
+            input.focus();
+            input.select();
+            task.classList.add('editing');
         });
 
-        menuButton.addEventListener('click', (e) => { 
-            e.stopPropagation(); 
+        menuButton.addEventListener('click', (e) => {
+            e.stopPropagation();
             const isHidden = menuPopup.classList.contains('hidden');
-            this.closeAllMenus(task); 
+            this.closeAllMenus(task);
 
             if (isHidden) {
                 menuPopup.classList.remove('hidden');
-                task.classList.add('menu-open'); 
+                task.classList.add('menu-open');
             } else {
                 menuPopup.classList.add('hidden');
                 task.classList.remove('menu-open');
@@ -354,26 +354,26 @@ class TaskManager {
             }
         });
 
-        moveButton.addEventListener('click', () => { 
-            this.openMoveTaskPopup(task); 
+        moveButton.addEventListener('click', () => {
+            this.openMoveTaskPopup(task);
             if(menuPopup) {
                 menuPopup.classList.add('hidden');
                 task.classList.remove('menu-open');
             }
         });
 
-        deleteButton.addEventListener('click', () => { 
+        deleteButton.addEventListener('click', () => {
             task.remove();
             if(menuPopup) {
                 menuPopup.classList.add('hidden');
                 task.classList.remove('menu-open');
             }
-            this.saveToLocalStorage(); 
+            this.saveToLocalStorage();
         });
 
-        taskCheck.addEventListener('change', (e) => { 
-            task.classList.toggle('completed', e.target.checked); 
-            this.saveToLocalStorage(); 
+        taskCheck.addEventListener('change', (e) => {
+            task.classList.toggle('completed', e.target.checked);
+            this.saveToLocalStorage();
         });
     }
 
@@ -387,18 +387,18 @@ class TaskManager {
             return;
         }
 
-        this.taskToMove = taskElement; 
+        this.taskToMove = taskElement;
 
         const currentDayTitle = taskElement.closest('.day-card')?.querySelector('.day-title')?.textContent;
         if (currentDayTitle) {
             daySelect.value = currentDayTitle;
         } else {
-            daySelect.selectedIndex = 0; 
+            daySelect.selectedIndex = 0;
         }
 
-        this.closeAllPopups(); 
-        overlay.classList.add('active'); 
-        popup.classList.remove('hidden'); 
+        this.closeAllPopups();
+        overlay.classList.add('active');
+        popup.classList.remove('hidden');
     }
 
     handleMoveTaskAccept() {
@@ -412,6 +412,7 @@ class TaskManager {
         const popup = document.getElementById('moveTaskPopup');
         if (!popup) {
             console.error("Move task popup element not found.");
+            this.closeAllPopups();
             return;
         }
         const daySelect = popup.querySelector('.move-day-select');
@@ -499,9 +500,16 @@ class TaskManager {
             const taskText = task.querySelector('.task-text')?.textContent || task.querySelector('.task-text-edit')?.value || '';
             const originalDay = task.closest('.day-card')?.querySelector('.day-title')?.textContent || null;
 
-            const completedTaskElement = this.createCompletedTaskElement(taskText, originalDay);
+            // Check if a task with the same text and originalDay already exists in completedTasksList
+            const exists = Array.from(completedTasksList.children).some(
+                existingTask => existingTask.querySelector('.task-text')?.textContent === taskText &&
+                                existingTask.querySelector('.completed-restore-btn')?.dataset.originalDay === originalDay
+            );
 
-            completedTasksList.appendChild(completedTaskElement);
+            if (!exists) {
+                const completedTaskElement = this.createCompletedTaskElement(taskText, originalDay);
+                completedTasksList.appendChild(completedTaskElement);
+            }
 
             task.remove();
         });
@@ -526,8 +534,8 @@ class TaskManager {
 
         div.querySelector('.completed-delete-btn')?.addEventListener('click', () => {
             if (confirm('¿Está seguro de que desea eliminar esta tarea completada de forma permanente?')) {
-                div.remove(); 
-                this.saveToLocalStorage(); 
+                div.remove();
+                this.saveToLocalStorage();
             }
         });
 
@@ -560,17 +568,17 @@ class TaskManager {
 
         const otherTasksList = targetDayCard.querySelector('.other-tasks');
         if (otherTasksList && newTask) {
-            otherTasksList.appendChild(newTask); 
-            newTask.classList.add('other-task'); 
+            otherTasksList.appendChild(newTask);
+            newTask.classList.add('other-task');
         } else {
             console.error("Could not find '.other-tasks' list in the target day card or failed to create new task.");
-             document.querySelector('.completed-tasks-list')?.appendChild(taskElement); 
+             document.querySelector('.completed-tasks-list')?.appendChild(taskElement);
             return;
         }
 
-        taskElement.remove(); 
+        taskElement.remove();
 
-        this.saveToLocalStorage(); 
+        this.saveToLocalStorage();
     }
 
     saveToLocalStorage() {
@@ -616,7 +624,7 @@ class TaskManager {
                 .filter(task => task.classList.contains('completed-task'))
                 .map(task => ({
                 text: task.querySelector('.task-text')?.textContent.trim() || '',
-                completed: true, 
+                completed: true,
                 originalDay: task.querySelector('.completed-restore-btn')?.dataset.originalDay || null
             }));
         } else {
@@ -690,7 +698,18 @@ class TaskManager {
             if (completedTasksList) {
                 completedTasksList.innerHTML = '';
                 if (data.completedTasks && Array.isArray(data.completedTasks)) {
+                    // Filter out duplicates before adding to the DOM
+                    const uniqueCompletedTasks = [];
+                    const seen = new Set();
                     data.completedTasks.forEach(taskData => {
+                        const key = `${taskData.text}|${taskData.originalDay}`;
+                        if (!seen.has(key)) {
+                            uniqueCompletedTasks.push(taskData);
+                            seen.add(key);
+                        }
+                    });
+
+                    uniqueCompletedTasks.forEach(taskData => {
                         if (taskData && typeof taskData.text === 'string') {
                             const completedTaskElement = this.createCompletedTaskElement(taskData.text, taskData.originalDay);
                             completedTasksList.appendChild(completedTaskElement);
