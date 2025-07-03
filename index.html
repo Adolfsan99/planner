@@ -20,8 +20,13 @@
             <button id="importData">Importar Datos</button>
         </div>
 
-        <div class="days-container">
-            <!-- Los días se generarán dinámicamente -->
+        <div class="main-content">
+            <div class="days-container">
+                <!-- Los días se generarán dinámicamente -->
+            </div>
+
+            <!-- Tareas Sin Asignar ahora dentro de days-container -->
+
         </div>
 
         <div id="completedTasks" class="completed-container hidden">
@@ -46,8 +51,24 @@
                 <div class="other-tasks tasks-list"></div>
             </div>
 
-            <!-- Moved add-task button to the bottom -->
-            <button class="add-task">+ Nueva Tarea</button>
+            <div class="day-actions">
+                <button class="add-task">+ Nueva Tarea</button>
+                <button class="move-all-to-unassigned">Mover todas</button>
+            </div>
+        </div>
+    </template>
+
+    <!-- Template para la estructura de tareas sin asignar -->
+    <template id="unassignedTemplate">
+        <div id="unassignedTasksContainer" class="day-card unassigned-container">
+            <h2 class="day-title">Tareas Sin Asignar</h2>
+            <div class="subspace">
+                <h3>General</h3>
+                <div class="unassigned-tasks tasks-list"></div>
+            </div>
+            <div class="day-actions">
+                <button class="add-task">+ Nueva Tarea</button>
+            </div>
         </div>
     </template>
 
