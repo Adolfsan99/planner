@@ -54,6 +54,20 @@ class TaskManager {
                     const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
                     const seconds = Math.floor((diffMs % (1000 * 60)) / 1000);
 
+                    let colorClass = '';
+                    if (hours >= 16) {
+                        colorClass = 'time-red'; // Using a generic 'red' for 16+ as per 3-0 rule
+                    } else if (hours >= 8 && hours < 16) {
+                        colorClass = 'time-green';
+                    } else if (hours >= 4 && hours < 8) {
+                        colorClass = 'time-orange';
+                    } else if (hours >= 0 && hours < 4) {
+                        colorClass = 'time-red';
+                    }
+                    
+                    hoursRemainingElement.className = 'hours-remaining'; // Reset classes
+                    hoursRemainingElement.classList.add(colorClass);
+
                     hoursRemainingElement.textContent = `Horas restantes: ${hours}h ${minutes}m ${seconds}s`;
                     hoursRemainingElement.style.display = 'block';
                 };
