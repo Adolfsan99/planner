@@ -36,3 +36,42 @@ Cada función de este planificador fue diseñada con una intención específica 
     * **Persistencia:** Cada acción (crear, editar, mover, completar una tarea) dispara una función `saveToLocalStorage()`. Esto asegura que el estado actual del tablero siempre esté guardado en el navegador del usuario, sobreviviendo a recargas de página y cierres.
     * **Autonomía:** Los botones de "Exportar Datos" e "Importar Datos" permiten al usuario descargar el estado completo de su planificador en un archivo JSON y restaurarlo más tarde o en otro dispositivo.
 * **La Diferencia:** Muchas herramientas online guardan los datos en la nube, lo que puede generar preocupaciones de privacidad o dependencia de la conexión a internet. Este enfoque 100% local es más rápido, privado y le da al usuario control total. La función de importación/exportación es una declaración de principios: **tus datos te pertenecen** y eres libre de llevarlos contigo.
+
+Esta aplicación ayuda al usuario a transformar la gestión de sus tareas semanales en un proceso estructurado, consciente y adaptable. Lo logra al abordar problemas comunes de la planificación, como la carga mental, la falta de foco y la rigidez de otras herramientas.
+
+A continuación se detalla cómo y por qué ayuda en cada aspecto:
+
+### Reduce la Carga Mental y el Estrés
+
+* **Cómo**: La aplicación ofrece una estructura visual clara para cada día de la semana, comenzando siempre por el día actual. Además, cuenta con una sección específica para "Tareas Sin Asignar".
+* **Porqué**: Al externalizar las tareas en un sistema fiable, el usuario libera su mente de la necesidad de recordarlo todo. La vista anclada en el "hoy" elimina la fricción de tener que buscar el día correcto, mientras que el contenedor de "Sin Asignar" funciona como un buzón de entrada para capturar ideas al instante sin la presión de tener que agendarlas, reduciendo la ansiedad de olvidar algo importante.
+
+### Aumenta el Foco y la Productividad
+
+* **Cómo**: Cada día se divide en dos sub-espacios: "Prioritarias" y "Todo lo demás". El día actual muestra un contador de horas restantes que cambia de color.
+* **Porqué**: Esta división obliga al usuario a realizar una priorización activa y consciente, dirigiendo su energía primero a las tareas de mayor impacto. El contador de tiempo actúa como un "coach" de ritmo:
+    * **Verde**: Indica que hay tiempo suficiente para trabajar de manera sostenida.
+    * **Naranja**: Es una señal para empezar a cerrar temas y enfocarse en lo crucial.
+    * **Rojo**: Aconseja desacelerar para evitar el agotamiento al final del día o empezar con calma al inicio.
+    Esto ayuda al usuario a gestionar su energía, no solo su tiempo.
+
+### Fomenta la Flexibilidad y la Adaptación
+
+* **Cómo**: La funcionalidad principal para mover tareas es arrastrar y soltar (drag-and-drop), implementada con SortableJS. Adicionalmente, cada tarea tiene una opción "Mover" en su menú.
+* **Porqué**: Los planes rara vez son estáticos. La capacidad de reorganizar tareas de forma fluida y visual permite que el planificador se adapte a la realidad cambiante del usuario. Si un día se complica, las tareas pueden moverse a otro día, a la sección "Sin Asignar" o su prioridad puede cambiar sin esfuerzo, haciendo de la replanificación un proceso rápido en lugar de una tarea tediosa.
+
+### Empodera al Usuario dándole Control y Autonomía
+
+* **Cómo**: La aplicación guarda todos los datos en el `localStorage` del navegador del usuario. También incluye funciones para "Exportar Datos" e "Importar Datos" en formato JSON.
+* **Porqué**: Esto le da al usuario la certeza de que su información es privada y está bajo su control, no en una nube de terceros. La persistencia automática significa que su trabajo nunca se pierde. La capacidad de exportar sus datos le otorga verdadera propiedad sobre su planificación, permitiéndole crear copias de seguridad o migrar su información libremente, eliminando la dependencia de la plataforma.
+
+En conclusión, el Planificador Semanal Interactivo es más que una simple herramienta de organización; es un sistema de productividad diseñado para transformar la manera en que el usuario interactúa con su tiempo y sus responsabilidades.
+
+Su verdadero valor no reside únicamente en la capacidad de listar tareas, sino en cómo su diseño guía activamente al usuario hacia una mayor conciencia y efectividad. Lo logra al:
+
+* **Anclar al usuario en el presente**: La vista semanal siempre comienza en el día actual, eliminando distracciones y centrando la atención en lo que se puede hacer ahora.
+* **Fomentar la priorización activa**: Al separar visualmente las tareas "Prioritarias" del "resto", obliga al usuario a tomar decisiones deliberadas sobre lo que realmente importa cada día.
+* **Gestionar la energía, no solo las tareas**: El contador de tiempo con código de colores es una característica única que actúa como un coach, sugiriendo cuándo es momento de trabajar con intensidad, cuándo priorizar y cuándo es mejor descansar para evitar el agotamiento.
+* **Ofrecer flexibilidad y control total**: Con la funcionalidad de arrastrar y soltar, menús contextuales y la gestión de tareas sin asignar, la aplicación se adapta al flujo de trabajo del usuario. La autonomía sobre los datos, garantizada por el almacenamiento local y las funciones de importación/exportación, genera confianza y empodera al usuario.
+
+A diferencia de otras herramientas que pueden ser demasiado rígidas o excesivamente complejas, este planificador encuentra un equilibrio al ofrecer una estructura robusta pero flexible. No solo ayuda a organizar el trabajo, sino que enseña una forma más intencionada y sostenible de abordarlo. Es una herramienta que se adapta al usuario, no una que le obliga a adaptarse a ella.
