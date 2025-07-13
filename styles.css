@@ -311,6 +311,7 @@ body {
     padding-right: 4px;
     z-index: 0;
     position: relative;
+    white-space: pre-wrap; /* Allows line breaks and preserves whitespace */
 }
 
 .task-text-edit {
@@ -324,6 +325,10 @@ body {
     z-index: 2;
     position: relative;
     min-width: 0;
+    resize: none; /* Disable manual resize */
+    overflow: hidden; /* Hide scrollbar when content exceeds initial height */
+    min-height: 20px; /* Adjust as needed */
+    line-height: 1.3;
 }
 
 .task-check {

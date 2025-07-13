@@ -334,7 +334,7 @@ class TaskManager {
         const taskElement = template.content.cloneNode(true);
 
         const task = taskElement.querySelector('.task');
-        const taskTextSpan = task.querySelector('.task-text');
+        const taskTextSpan = task.querySelector('.task-text'); // This is now a div
         const taskCheckbox = task.querySelector('.task-check');
 
         taskTextSpan.textContent = text;
@@ -350,7 +350,7 @@ class TaskManager {
     setupTaskEventListeners(task) {
         if (!task) return;
 
-        const taskText = task.querySelector('.task-text');
+        const taskText = task.querySelector('.task-text'); // This is now a div
         const menuButton = task.querySelector('.task-menu');
         const menuPopup = task.querySelector('.task-menu-popup');
         const editButton = task.querySelector('.edit-task');
@@ -361,39 +361,47 @@ class TaskManager {
         taskText.addEventListener('dblclick', () => {
             this.closeAllMenus(task);
 
-            const input = document.createElement('input');
-            input.type = 'text';
-            input.value = taskText.textContent.trim();
-            input.classList.add('task-text-edit');
-            input.setAttribute('placeholder', 'Editar tarea');
+            const textarea = document.createElement('textarea'); // Changed to textarea
+            textarea.value = taskText.textContent.trim();
+            textarea.classList.add('task-text-edit');
+            textarea.setAttribute('placeholder', 'Editar tarea');
+            textarea.rows = 1; // Start with 1 row, will adjust
+
+            const adjustHeight = () => {
+                textarea.style.height = 'auto';
+                textarea.style.height = textarea.scrollHeight + 'px';
+            };
+
+            textarea.addEventListener('input', adjustHeight);
 
             const saveEdit = () => {
-                const newText = input.value.trim();
-                if (input.parentNode === task) {
+                const newText = textarea.value.trim();
+                if (textarea.parentNode === task) {
                     taskText.textContent = newText || 'Nueva tarea';
-                    input.replaceWith(taskText);
+                    textarea.replaceWith(taskText);
                     task.classList.remove('editing');
                     this.saveToLocalStorage(); // Save after editing
                 }
             };
 
-            input.addEventListener('blur', saveEdit);
+            textarea.addEventListener('blur', saveEdit);
 
-            input.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') {
+            textarea.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) { // Save on Enter, new line on Shift+Enter
                     e.preventDefault();
                     saveEdit();
                 } else if (e.key === 'Escape') {
-                     if (input.parentNode === task) {
-                        input.replaceWith(taskText);
+                     if (textarea.parentNode === task) {
+                        textarea.replaceWith(taskText);
                         task.classList.remove('editing');
                     }
                 }
             });
 
-            taskText.replaceWith(input);
-            input.focus();
-            input.select();
+            taskText.replaceWith(textarea);
+            textarea.focus();
+            textarea.select();
+            adjustHeight(); // Adjust height initially
             task.classList.add('editing');
         });
 
@@ -762,7 +770,7 @@ class TaskManager {
                     priority: Array.from(dayCard.querySelector('.priority-tasks')?.children || [])
                         .filter(task => task.classList.contains('task') && !task.classList.contains('sortable-ghost') && !task.classList.contains('sortable-drag'))
                         .map(task => {
-                        const textElement = task.querySelector('.task-text');
+                        const textElement = task.querySelector('.task-text'); // Now a div
                         const taskText = textElement ? textElement.textContent.trim() : '';
                         const isCompleted = task.querySelector('.task-check')?.checked || false;
                         return {
@@ -773,7 +781,7 @@ class TaskManager {
                     other: Array.from(dayCard.querySelector('.other-tasks')?.children || [])
                         .filter(task => task.classList.contains('task') && !task.classList.contains('sortable-ghost') && !task.classList.contains('sortable-drag'))
                         .map(task => {
-                        const textElement = task.querySelector('.task-text');
+                        const textElement = task.querySelector('.task-text'); // Now a div
                         const taskText = textElement ? textElement.textContent.trim() : '';
                         const isCompleted = task.querySelector('.task-check')?.checked || false;
                         return {
@@ -791,7 +799,7 @@ class TaskManager {
             data.unassignedTasks = Array.from(unassignedTasksList.children)
                 .filter(task => task.classList.contains('task') && !task.classList.contains('sortable-ghost') && !task.classList.contains('sortable-drag'))
                 .map(task => {
-                const textElement = task.querySelector('.task-text');
+                const textElement = task.querySelector('.task-text'); // Now a div
                 const taskText = textElement ? textElement.textContent.trim() : '';
                 const isCompleted = task.querySelector('.task-check')?.checked || false;
                 return {
