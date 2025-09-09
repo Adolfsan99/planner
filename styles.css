@@ -60,11 +60,11 @@ body {
 }
 
 .days-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    display: flex; /* Changed from grid to flex */
+    flex-direction: column; /* Stack items vertically */
     gap: 20px;
     flex-grow: 1;
-    align-items: start;
+    align-items: stretch; /* Stretch items to fill available width */
 }
 
 .unassigned-container {
@@ -78,6 +78,7 @@ body {
     position: relative; /* No longer sticky, part of grid flow */
     top: auto; /* Reset sticky property */
     align-self: flex-start; /* Still align to start */
+    width: 100%; /* Ensure it takes full width in column layout */
 }
 
 @media (max-width: 900px) {
@@ -91,12 +92,6 @@ body {
     }
 }
 
-@media (min-width: 1024px) {
-    .days-container {
-        grid-template-columns: repeat(2, 1fr); /* 2 columns for larger screens */
-    }
-}
-
 .day-card {
     background-color: white;
     border-radius: 10px;
@@ -107,6 +102,7 @@ body {
     position: relative; 
     min-height: 300px;
     transition: all 0.3s ease;
+    width: 100%; /* Ensure day cards take full width */
 }
 
 .day-card h2 {
@@ -636,7 +632,7 @@ body {
 /* Responsive adjustments */
 @media (max-width: 768px) {
     .days-container {
-        grid-template-columns: 1fr;
+        flex-direction: column; /* Ensure column layout on small screens */
     }
 
     .container {
